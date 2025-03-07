@@ -7,7 +7,7 @@ export async function POST(req) {
     const API_TOKEN = process.env.LILYPAD_API_TOKEN;
 
     const requestBody = {
-      model: "llama2:7b",
+      model: "llama3.1:8b",
       messages,
       max_tokens: 2048,
       temperature: 0.7,

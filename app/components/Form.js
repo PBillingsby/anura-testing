@@ -4,7 +4,7 @@ import { useState } from "react";
 const MAX_HISTORY = 6;
 
 export default function Form() {
-  const [inputValue, setInputValue] = useState("What is the future of decentralized AI?");
+  const [inputValue, setInputValue] = useState("");
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,7 @@ export default function Form() {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      const res = await fetch("/api/run-api", {
+      const res = await fetch("/api/run-inference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedConversation }),
@@ -34,7 +34,6 @@ export default function Form() {
       setInputValue("");
     } catch (error) {
       console.error("Error:", error.message);
-      alert(`Error: ${error.message}`);
     }
 
     setLoading(false);
@@ -42,25 +41,29 @@ export default function Form() {
 
   function extractContent(apiResponse) {
     const { text } = apiResponse;
-  
+
+    // Split response by "data: " but remove empty entries
     const jsonStrings = text.split("data: ").filter((entry) => {
       try {
         const jsonData = JSON.parse(entry.trim());
-        return jsonData.message?.content;
+        // Ensure it's the assistant's message by checking for 'choices'
+        return jsonData.choices?.[0]?.message?.content;
       } catch {
-        return false;
+        return false; // Skip invalid JSON entries
       }
     });
 
     if (jsonStrings.length === 0) return null;
-  
+
+    // Get the last valid assistant response
     const finalData = JSON.parse(jsonStrings[jsonStrings.length - 1].trim());
-    return finalData.message.content;
-  }
+    return finalData.choices[0].message.content;
+}
+
 
   return (
     <div className="flex flex-col mx-auto text-center items-center w-2/3 justify-center bg-black text-white">
-      <p className="text-3xl mb-4">llama2-7b</p>
+      <p className="text-3xl mb-4">llama3.1:8b</p>
 
       <div className="w-full p-6 border border-white rounded-lg bg-gray-900 text-left">
         <p className="text-lg font-semibold mb-2">Conversation:</p>
@@ -93,7 +96,7 @@ export default function Form() {
 
         <button
           type="submit"
-          className="w-full mt-4 p-3 font-semibold border border-white rounded-lg transition-all duration-200 ease-in-out bg-white text-black hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-1/3 mt-4 p-3 font-semibold border border-white rounded-lg transition-all duration-200 ease-in-out bg-white text-black hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={loading}
         >
           {loading ? "Thinking..." : "Submit"}
@@ -102,7 +105,7 @@ export default function Form() {
 
       {conversation.length > 0 && (
         <button
-          className="w-full mt-4 p-3 font-semibold border border-white rounded-lg transition-all duration-200 ease-in-out bg-white text-black hover:bg-gray-300"
+          className="w-1/3 mt-4 p-3 font-semibold border border-white rounded-lg transition-all duration-200 ease-in-out bg-white text-black hover:bg-gray-300"
           onClick={() => {
             setConversation([]);
           }}

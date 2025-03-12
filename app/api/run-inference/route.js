@@ -36,6 +36,8 @@ export async function POST(req) {
       result += new TextDecoder().decode(value);
     }
 
+    console.log("-----", result)
+
     return NextResponse.json({ text: result });
   } catch (error) {
     console.error("API Route Error:", error);
